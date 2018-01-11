@@ -1,0 +1,11 @@
+base
+knitr
+readr
+dplyr
+tidytext
+tokenizers
+ggplot2
+tidyr
+scales
+stringr
+gridExtra
