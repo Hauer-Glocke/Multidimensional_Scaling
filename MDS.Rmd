@@ -1,5 +1,5 @@
 ---
-title: "Multidimensional Scaling"
+title: "Methods for Dimensionality Reduction"
 author: "Ramón Roales-Welsch"
 date: "11 Januar 2018"
 output:
@@ -30,12 +30,145 @@ source('data_sample.R')
 
 ```
 
+\newpage
 # Introduction
+## Overview
 
-## PCA
+1. Multidimensional Scaling (MDS)
+    - https://en.wikipedia.org/wiki/Multidimensional_scaling
+    - Dimension reduction by using feature-distances between observations
 
-## STUFF
+2. Principal Components Analysis (PCA)
+    - https://en.wikipedia.org/wiki/Principal_component_analysis
+    - Reduce dimensions while maximizing variance of features
+    - Slide 88: PCA is not applicable in Big Data (*FastMap* method is proposed.)
 
+3. Feature Selection
+    - https://en.wikipedia.org/wiki/Feature_selection
+    - Drop weak features and select features with strong explanatory power
+
+
+## Motivation, Goal and Selection Criteria
+
+Wikipedia names three main motivations of dimensionality reduction: Reduce costs (time and storage), reduce multicollinearity and provide visualisation oportunities. In the following the goals and selection criteria for mentioned methods are discussed:
+
+1. MDS
+    - Goal: Visualize your dataset in a 2-dimensional space and to show the similarities between objects(observations).
+    - Alternative to Factor Analysis: Focus on dissimilarities (distances) between objects rather than similarities between features (via correlation matrices).
+
+2. PCA
+    - Goal: Dimension reduction and eliminitaion of correlation between features. (*Bishop 2006*: Dimensionality reduction, lossy data compression, feature extraction and data visualitation.)
+    - Projects $d$ features on $m$ features with $m < d$.
+
+3. Feature Selection
+    - Goal: Reduce overfitting, improve generalization and speed up computation.
+    - 
+
+
+\newpage
+
+# Multidimensional Scaling (MDS)
+
+## Classical MDS
+
+To build up the 2-dimensional matrix $D = [d_{i,j}]$, you need to compute the single components of the features $x$ and $y$. Therefore, you use the subsequent formula according to Wikipedia:
+
+
+$$d_{i,j} = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$$
+
+Lecture Slide 76 gives the formula for $d-dimensions$:
+
+$$d(x_i, x_j)^2 = \sum_{k = 1}^{d}{(x_{i,k} - x_{j,k})^2}$$
+**Not found on slides** In order to evaluate, whether the MDS provides a useful dimensionality reduction, one need to examine the Stress/Strain (refering to the information loss) of the reduction.
+
+## Metric MDS
+
+$$Stress_D(x_1, x_2, ..., x_N) = \Bigg(\frac{\sum_{i,j}(d_{i,j} - \begin{Vmatrix}x_i - x_j \end{Vmatrix})^2}{\sum_{i,j} d_{i,j}^2}\Bigg)^{1/2}$$
+
+## Non-metric MDS
+
+$$Stress = \sqrt{\frac{\sum{(f(x) - d)^2}}{\sum{d^2}}}$$
+\newpage
+
+# Principal Components Analysis (PCA) - Slides 81-88
+
+PCA projects $x \in \mathbb{R}^d$ to $z \in \mathbb{R}^m$. When $\begin{Vmatrix}w \end{Vmatrix} = 1$ holds, the following transformation can be applied:
+
+$$z = w^T x$$
+
+The goal is to minimize the information loss in the new m-dimensional projection. Let $A$ be the $N$ x $m$ matrix with $N$ observations and $m$ features. $\mathbf{e}$ is an all-ones vector of length $N$. $X$ can then be defined as:
+
+$$X = A + e e^T$$
+
+From which follows $\Sigma$ as the covariance matrix with $m$ x $m$ dimensions
+
+$$\Sigma = cov(X) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
+\newpage
+
+# Covariation Matrix
+
+$$\Sigma^{(m)} = E\bigg[ (X^{(m)} - E[X^{(m)}])(X^{(m)} - E[X^{(m)}])^T\bigg]$$
+
+$$\Sigma^{(m)} = E\bigg[ \big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)\big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)^T\bigg]$$
+
+$$\Sigma^{(m)} = \sum_{i=1}^{N} \frac{1}{N}\bigg[ (x_i^{(m)} - \bar{x}^{(m)})(x_i^{(m)} - \bar{x}^{(m)})^T\bigg]$$
+
+
+
+# Just Stuff and remaining formulas
+
+ The covariance matrix $\Sigma$ is calculated with 
+
+$$\Sigma^{(d)} = cov(X^{(d)}) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
+
+$$\Sigma_{(1)} = cov(X_{(1)}) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
+
+\newpage
+
+#Feature Selection
+
+## Overview (Slide 89/90)
+
+1. Evaluate the 'quality' of a feature.
+2. Find best subset of features using the quality criterium.
+    * highest quality of featires
+    * Lowest multicollinearity in subset
+    
+Use greddy algorithm with either bottom-up or top-down approach:
+
+- bottom-up: Start with no feature and add new feature with every iteration. Evaluation via an error function and repeated until the required dimension is achieved.
+
+- top-down: Start with all feature and remove the least explanatory with each step under consideration of an error function and until the required dimension is achieved.
+
+## Outlier and Duplicates
+
+### Outlier (Slide 101/102)
+
+* A boxplot can reveal outlier. 
+* Also mean and standard deviation (sd) can be used. Usually outlier can be identified by $mean \pm sd$.
+* Use cluster, every observation, which does not belong to a cluster, is a outlier.
+* Parametrized processes, for instance mixture of gaussians.
+
+### Duplicates (Slide 103)
+
+Use distances to find duplicates or observations which are very similar (very small distance). Reduce the number of observations and only keep one of them.
+
+
+\newpage
+# Technical Implementation
+
+## R
+
+
+## Python (sklearn - package)
+
+### Useful function/package
+
+sklearn.manifold.MDS(n_components=2, metric=True, n_init=4, max_iter=300, verbose=0, eps=0.001, n_jobs=1, random_state=None, dissimilarity=’euclidean’)
+
+http://scikit-learn.org/stable/modules/generated/sklearn.manifold.MDS.html
+
+\newpage
 # Appendix: Code examples
 
 ## Example: Table
@@ -47,12 +180,14 @@ kable(summary(cars),
 ```
 
 ## Example: Plot
-```{r example_plot, figure=TRUE, fig.align = "center", fig.width = 6, fig.asp =  1.2}
+
+```{r example_plot, figure=TRUE, fig.align = "center", fig.width = 4, fig.asp =  1}
 plot(cars, 
       main = "Example Cars Dataset")
 
 ```
 
+\newpage
 # Appendix: Data Sample
 
 ```
@@ -61,3 +196,15 @@ plot(cars,
 Mirror the code here. It is executed in a separate document.
 
 ```
+
+\newpage
+# Appendix: Literature Sources
+
+* Lecture Slides from Machine Learning, Dr. Thomas Fober
+* Bishop, C. (2007). *Pattern Recognition and Machine Learning* (Information Science and Statistics), 1st edn. 2006. corr. 2nd printing edn. Springer, New York.
+* Wikipedia
+    - https://en.wikipedia.org/wiki/Multidimensional_scaling
+    - https://en.wikipedia.org/wiki/Principal_component_analysis
+    - https://en.wikipedia.org/wiki/Feature_selection
+* STUFF
+    - STUFF
