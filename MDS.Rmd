@@ -35,16 +35,13 @@ source('data_sample.R')
 ## Overview
 
 1. Multidimensional Scaling (MDS)
-    - https://en.wikipedia.org/wiki/Multidimensional_scaling
     - Dimension reduction by using feature-distances between observations
 
 2. Principal Components Analysis (PCA)
-    - https://en.wikipedia.org/wiki/Principal_component_analysis
     - Reduce dimensions while maximizing variance of features
     - Slide 88: PCA is not applicable in Big Data (*FastMap* method is proposed.)
 
 3. Feature Selection
-    - https://en.wikipedia.org/wiki/Feature_selection
     - Drop weak features and select features with strong explanatory power
 
 
@@ -62,7 +59,7 @@ Wikipedia names three main motivations of dimensionality reduction: Reduce costs
 
 3. Feature Selection
     - Goal: Reduce overfitting, improve generalization and speed up computation.
-    - 
+    - Either drop weak features or select strong features.
 
 
 \newpage
@@ -92,36 +89,42 @@ $$Stress = \sqrt{\frac{\sum{(f(x) - d)^2}}{\sum{d^2}}}$$
 
 # Principal Components Analysis (PCA) - Slides 81-88
 
+
+## Projection to $m$-Dimensions
 PCA projects $x \in \mathbb{R}^d$ to $z \in \mathbb{R}^m$. When $\begin{Vmatrix}w \end{Vmatrix} = 1$ holds, the following transformation can be applied:
 
 $$z = w^T x$$
 
-The goal is to minimize the information loss in the new m-dimensional projection. Let $A$ be the $N$ x $m$ matrix with $N$ observations and $m$ features. $\mathbf{e}$ is an all-ones vector of length $N$. $X$ can then be defined as:
+## Maximizing Variance
 
-$$X = A + e e^T$$
+When we maximize the variance of our projection $z$ and therefore minimize the information loss of the transformation, $\begin{Vmatrix}w_1 \end{Vmatrix} = w_1^T * w_1 =  1$ must hold. Otherwise $\begin{Vmatrix}w_1 \end{Vmatrix} \rightarrow \infty$ applies and the variables get inflated to $\infty$. When we project $x_i$ with $z_i = w_1^T x_i$, the mean $\bar{x} = \frac{1}{N}\sum_{i=1}^{N}x_i$ of the projection then is $\bar{z} = w_1^T\bar{x}$. From this follows the variance definition, which we want to maximize (Slide 83):
 
-From which follows $\Sigma$ as the covariance matrix with $m$ x $m$ dimensions
+$$\frac{1}{N} \sum_{i=1}^{N} (w_1^T x_i - w_1^T \bar{x})^2 = \frac{1}{N} \sum_{i=1}^{N} \big(w_1^T( x_i - \bar{x})\big)^2 =w_1^T \bigg[ \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T \bigg] w_1 = w_1^T \Sigma w_1$$
 
-$$\Sigma = cov(X) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
-\newpage
+$\Sigma$ is the $m$ x $m$ covariance matrix and further referred to as $\Sigma^{(m)}$ to indicate the $m$-dimensions. Using the langrange multiplier $\lambda_1 \in \mathbb{R}_{\leq0}$, we have the following optimization problem (Slide 84):
 
-# Covariation Matrix
+$$\underset{w_1}{\text{maximize}} ~~ f(w_1) = w_1^T \Sigma w_1 + \lambda_1 (1 - w_1^T w_1)$$
 
-$$\Sigma^{(m)} = E\bigg[ (X^{(m)} - E[X^{(m)}])(X^{(m)} - E[X^{(m)}])^T\bigg]$$
+$$f'(w_1) \rightarrow \Sigma w_1 - \lambda_1w_1 \mathop{=}\limits^! 0$$
+Following Slide 85, two observations can be made:
 
-$$\Sigma^{(m)} = E\bigg[ \big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)\big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)^T\bigg]$$
+1. With $\Sigma w_1 = \lambda_1 w_1$ or $w_1^T \Sigma w_1 = \lambda_1$, $w_1$ have to be an 'eigenvector' of $\Sigma$, which is scaling the projection $\Sigma w_1$.
 
-$$\Sigma^{(m)} = \sum_{i=1}^{N} \frac{1}{N}\bigg[ (x_i^{(m)} - \bar{x}^{(m)})(x_i^{(m)} - \bar{x}^{(m)})^T\bigg]$$
+2. The eigenvector with the highest eigenvalue of $w_1$ maximizes the variance of the projection.
 
+## Eliminate Correlation between Features
 
+We seek an orthognal relation between projected feature $z_1$ and $z_j$, which means the correlation between the features is equal to zero: $cor(z_1, z_2) = 0$. This lead to the condition $w_2^T w_1 = 0$ and the following optimization problem:
 
-# Just Stuff and remaining formulas
+$$\underset{w_2}{\text{maximize}} ~~ f(w_2) = w_1^T \Sigma w_1 + \lambda_2 (1 - w_1^T w_1) + \beta (0 - w_2^T w_1)$$
+<Slide 87> The first-order derivation is set to zero: $f'(w_2) \rightarrow 2 \Sigma w_2 - 2 \lambda_2 w_2 - \beta w_1 \mathop{=}\limits^! 0$ When we multiplicate this term from the left with $w_1$ we obtain the following expression:
 
- The covariance matrix $\Sigma$ is calculated with 
+$$2 w_1^T \Sigma w_2 - 2 \lambda_2 w_1^Tw_2 - \beta w_1^Tw_1 \mathop{=}\limits^! 0$$
+As $w_1^Tw_1 = 1$, then $\beta = 0$. We conditioned $w_1^Tw_2 = 0$ and observe $w_1^T \Sigma w_2 = w_2^T \Sigma w_1 = w_1^T \lambda_1 w_2 = 0$.
 
-$$\Sigma^{(d)} = cov(X^{(d)}) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
+Finally, we have a result, which is analogous to $w_1$: 
 
-$$\Sigma_{(1)} = cov(X_{(1)}) = \frac{1}{N} \sum_{i=1}^{N} (x_i - \bar{x})*(x_i - \bar{x})^T$$
+$$\Sigma w_2 = \lambda_2 w_2$$
 
 \newpage
 
@@ -155,12 +158,25 @@ Use distances to find duplicates or observations which are very similar (very sm
 
 
 \newpage
-# Technical Implementation
+# Appendix: Technical Implementation
+## Data Sample
+
+```
+# Code for Data Sample
+
+Mirror the code here. It is executed in a separate document.
+
+```
+
 
 ## R
 
 
 ## Python (sklearn - package)
+
+### Eigenvalue and Eigenvector (Numpy)
+
+You can calculate 'eigenvalue' and 'eigenvector' with the function *numpy.linalg.eig()*.
 
 ### Useful function/package
 
@@ -187,15 +203,6 @@ plot(cars,
 
 ```
 
-\newpage
-# Appendix: Data Sample
-
-```
-# Code for Data Sample
-
-Mirror the code here. It is executed in a separate document.
-
-```
 
 \newpage
 # Appendix: Literature Sources
@@ -208,3 +215,14 @@ Mirror the code here. It is executed in a separate document.
     - https://en.wikipedia.org/wiki/Feature_selection
 * STUFF
     - STUFF
+    
+
+# Appendix: Covariation Matrix Calculation (More formulas)
+
+$$\Sigma^{(m)} = E\bigg[ (X^{(m)} - E[X^{(m)}])(X^{(m)} - E[X^{(m)}])^T\bigg]$$
+
+
+$$\Sigma^{(m)} = E\bigg[ \big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)\big(X^{(m)} - \frac{1}{N} \sum_{i=1}^{N}X_i^{(m)}\big)^T\bigg]$$
+
+
+$$\Sigma^{(m)} = \sum_{i=1}^{N} \frac{1}{N}\bigg[ (x_i^{(m)} - \bar{x}^{(m)})(x_i^{(m)} - \bar{x}^{(m)})^T\bigg]$$
